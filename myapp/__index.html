@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>WebRTC Data to Peer test</title>
+	<script src="http://cdn.peerjs.com/0.3/peer.js"></script>
+	<script>
+    var peer1 = new Peer('peer1', {host: 'localhost', port: 9000, path: '/myapp'});
+    var peer2 = new Peer('peer2', {host: 'localhost', port: 9000, path: '/myapp'});
+    
+  	var conn = peer1.connect('peer2');
+	conn.on('open', function(){
+		console.log('connection peer1 -> peer2');
+
+		var xhr = new XMLHttpRequest();
+		xhr.open( "GET", "http://localhost:8888/myapp/trees.jpg", true );
+		xhr.responseType = "arraybuffer";
+		console.log(xhr);
+		xhr.onload = function( e ) {
+
+    	// Obtain a blob: URL for the image data.
+    	var arrayBufferView = new Uint8Array( this.response );
+    	var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
+    
+    	//conn.send(blob);
+    	};
+
+    	xhr.onreadystatechange = function(blob){
+    		if (xhr.readyState==4 && xhr.status==200){
+    			
+    			conn.send(blob);
+    		}
+    	}
+
+    	xhr.send();
+
+  		
+	});
+
+	peer2.on('connection', function(conn) {
+  		conn.on('data', function(data){
+    		console.log(data);
+  		});
+	});
+
+
+
+	</script>
+</head>
+
+<body id="home">
+
+	<h1>Data to Peer test</h1>
+
+</body>
+</html>

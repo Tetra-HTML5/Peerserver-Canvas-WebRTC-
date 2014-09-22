@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>WebRTC Data Server</title>
+	<script src="http://cdn.peerjs.com/0.3/peer.js"></script>
+	<script>
+
+  var server = new Peer('server', {host: 'localhost', port: 9000, path: '/myapp'});
+
+  server.on('connection', function(conn) {
+    conn.on('data', function(data){
+    // Will print 'hi!'
+    console.log(data);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open( "GET", data, true );
+    xhr.responseType = 'blob';
+    xhr.onload = function(e) {
+        if (this.status == 200) {
+        console.log(this);  
+        var blob = this.response;
+        console.log(blob.size);
+        var delay = 10;
+        var charSlice = 100000;
+        var dataSent = 0;
+        var intervalID = 0;       
+    
+        intervalID = setInterval(function(){
+            var sliceEndIndex = dataSent + charSlice;
+            if (sliceEndIndex > blob.size) {
+                sliceEndIndex = blob.size;
+            }
+
+            conn.send(blob.slice(dataSent, sliceEndIndex));
+            console.log(blob.slice(dataSent, sliceEndIndex));
+
+            dataSent = sliceEndIndex;
+            if (dataSent + 1 >= blob.size) {
+                console.log("All data chunks sent.");
+                //conn.send("end");
+                clearInterval(intervalID);
+            }
+        }, delay);
+
+
+
+
+
+        //conn.send(blob);
+        }
+    }
+
+    xhr.send();
+
+    //conn.send('hi back!');
+    });
+  });
+	
+  server.on('error', function(err) { console.log(err) });
+
+	</script>
+</head>
+
+<body id="home">
+
+	<h1>Peer Server</h1>
+
+</body>
+</html>

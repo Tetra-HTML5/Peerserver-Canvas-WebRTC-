@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>WebRTC Data to Peer test</title>
+	<script src="http://cdn.peerjs.com/0.3/peer.js"></script>
+	<script>
+
+  function getURLParameter(name) {
+    return decodeURIComponent(
+        (RegExp('[?|&]'+name + '=' + '(.+?)(&|$)').exec(location.search)||[null,null])[1]
+    );
+  }
+
+  var client = new Peer('client', {host: 'localhost', port: 9000, path: '/myapp'});
+    
+  var conn = client.connect('server',{reliable: true});
+  conn.on('open', function(){
+    conn.send(getURLParameter('file'));
+    
+  });
+  var counter = 0;
+  var imageData;
+  conn.on('data', function(data){
+    console.log(data);
+    
+    
+    counter++;
+    console.log(counter);
+    imageData += data;
+    if (counter == 3) {
+      
+      var dataView = new Uint8Array(imageData);
+      var dataBlob = new Blob([imageData],{type: 'image/png'});
+      console.log(dataBlob);
+      var url = window.URL.createObjectURL(dataBlob);
+
+      var img = document.createElement('img');
+      img.onload = function(e) {
+        window.URL.revokeObjectURL(img.src); // Clean up after yourself.
+      };
+      img.src = url;
+      document.body.appendChild(img);
+        
+    }
+    
+    
+  });
+  
+	
+  client.on('error', function(err) { console.log(err) });
+
+
+
+
+	</script>
+</head>
+
+<body id="home">
+
+	<h1>Peer client</h1>
+
+</body>
+</html>
